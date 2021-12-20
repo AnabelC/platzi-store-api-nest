@@ -1,16 +1,24 @@
 import {
-  Body,
   Controller,
-  Delete,
   Get,
+  Query,
   Param,
   Post,
+  Body,
   Put,
-  Query,
+  Delete,
+  HttpStatus,
+  HttpCode,
 } from '@nestjs/common';
+
+import { CategoriesService } from './../services/categories.service';
+
+import { ParseIntPipe } from './../common/parse-int.pipe';
+import { CreateCategoryDto, UpdateCategoryDto } from './../dtos/category.dto';
 
 @Controller('categories')
 export class CategoriesController {
+  constructor(private categoriesService: CategoriesService) {}
   @Get('/filter')
   getCategoryFilter(): string {
     return 'Yo soy un Filter';
@@ -18,45 +26,30 @@ export class CategoriesController {
 
   @Get('')
   getAll(@Query('limit') limit = 100, @Query('offset') offset = 0) {
-    return {
-      message: `Categories: limit => ${limit} y offset => ${offset}`,
-    };
+    return this.categoriesService.findAll();
   }
 
-  @Get('/:categoryId/products/:productId')
-  getCategory(
-    @Param('categoryId') categoryId: string,
-    @Param('productId') productId: string,
-  ) {
-    return `Category: ${categoryId} y Product ${productId}`;
-  }
-
-  @Get('/:categoryId')
-  getOne(@Param('categoryId') categoryId: string): string {
-    return `Category ${categoryId}`;
+  @Get(':categoryId')
+  @HttpCode(HttpStatus.ACCEPTED)
+  getOne(@Param('categoryId', ParseIntPipe) categoryId: number) {
+    return this.categoriesService.findOne(categoryId);
   }
 
   @Post()
-  create(@Body() payload: any) {
-    return {
-      message: 'Accion para crear Category',
-      payload,
-    };
+  create(@Body() payload: CreateCategoryDto) {
+    this.categoriesService.create(payload);
   }
 
-  @Put(':id')
-  update(@Param('id') id: number, @Body() payload: any) {
-    return {
-      id,
-      payload,
-    };
+  @Put(':categoryId')
+  update(
+    @Param('categoryId', ParseIntPipe) categoryId: number,
+    @Body() payload: UpdateCategoryDto,
+  ) {
+    this.categoriesService.update(categoryId, payload);
   }
 
-  @Delete(':id')
-  delete(@Param('id') id: number) {
-    return {
-      message: 'Eliminar Category',
-      id,
-    };
+  @Delete(':categoryId')
+  delete(@Param('categoryId', ParseIntPipe) categoryId: number) {
+    this.categoriesService.remove(categoryId);
   }
 }

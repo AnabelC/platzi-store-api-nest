@@ -1,16 +1,24 @@
 import {
-  Body,
   Controller,
-  Delete,
   Get,
+  Query,
   Param,
   Post,
+  Body,
   Put,
-  Query,
+  Delete,
+  HttpStatus,
+  HttpCode,
 } from '@nestjs/common';
+
+import { UsersService } from './../services/users.service';
+
+import { ParseIntPipe } from './../common/parse-int.pipe';
+import { CreateUserDto, UpdateUserDto } from './../dtos/user.dto';
 
 @Controller('users')
 export class UsersController {
+  constructor(private usersService: UsersService) {}
   @Get('/filter')
   getUserFilter(): string {
     return 'Yo soy un Filter';
@@ -18,37 +26,30 @@ export class UsersController {
 
   @Get('')
   getAll(@Query('limit') limit = 100, @Query('offset') offset = 0) {
-    return {
-      message: `users: limit => ${limit} y offset => ${offset}`,
-    };
+    return this.usersService.findAll();
   }
 
-  @Get('/:userId')
-  getOne(@Param('userId') userId: string): string {
-    return `User ${userId}`;
+  @Get(':userId')
+  @HttpCode(HttpStatus.ACCEPTED)
+  getOne(@Param('userId', ParseIntPipe) userId: number) {
+    return this.usersService.findOne(userId);
   }
 
   @Post()
-  create(@Body() payload: any) {
-    return {
-      message: 'Accion para crear User',
-      payload,
-    };
+  create(@Body() payload: CreateUserDto) {
+    this.usersService.create(payload);
   }
 
-  @Put(':id')
-  update(@Param('id') id: number, @Body() payload: any) {
-    return {
-      id,
-      payload,
-    };
+  @Put(':userId')
+  update(
+    @Param('userId', ParseIntPipe) userId: number,
+    @Body() payload: UpdateUserDto,
+  ) {
+    this.usersService.update(userId, payload);
   }
 
-  @Delete(':id')
-  delete(@Param('id') id: number) {
-    return {
-      message: 'Eliminar user',
-      id,
-    };
+  @Delete(':userId')
+  delete(@Param('userId', ParseIntPipe) userId: number) {
+    this.usersService.remove(userId);
   }
 }
